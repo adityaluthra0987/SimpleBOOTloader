@@ -1,0 +1,35 @@
+[BITS 16]
+[ORG 0x7C00]
+
+start :
+	; Set up the stack
+	cli				; Clear interrupts 
+	xor ax, ax			; Zero AX register
+	mov ds, ax			; Data Segment to 0
+	mov es, ax			; Extra Segment to 0
+	mov ss, ax			; Stack Segment to 0
+	mov sp, 0x7C00			; Stack Pointer to 0x7C00
+
+	; Print "Hello, I'm a bootloader"
+	mov si, hello_msg
+	call print_string
+
+	; Hang the system
+hang:
+	jmp hang
+
+print_string:
+	mov ah, 0x0E			; BIOS teletype function
+.repeat:
+	lodsb				; Load byte at DS:SI into AL, and increment SI
+	cmp al, 0			; Compare AL with 0 (end of string)
+	je .done			; if equal, jump to done
+	int 0x10			; Otherwise, print character in AL
+	jmp .repeat
+.done:
+	ret
+
+hello_msg db 'Hello, I"m a bootloader', 0
+
+times 510-($-$$) db 0			; Pad the rest of the sector with zeros
+dw 0xAA55				; Boot Signature
